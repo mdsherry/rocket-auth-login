@@ -1,18 +1,15 @@
+#![feature(proc_macro_hygiene, decl_macro)]
 
-#![feature(custom_derive)]
-#![feature(plugin)]
-#![plugin(rocket_codegen)]
+#[macro_use] extern crate rocket;
 
-extern crate rocket;
-extern crate serde;
-#[macro_use] extern crate serde_derive;
+#[macro_use] extern crate serde;
 extern crate rmp_serde as rmps;
 extern crate regex;
 extern crate time;
 extern crate titlecase;
 extern crate htmlescape;
 #[allow(unused_imports)] #[macro_use] extern crate serde_json;
-// #[macro_use] extern crate lazy_static;
+
 extern crate rocket_auth_login as auth;
 
 use auth::authorization::*;

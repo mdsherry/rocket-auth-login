@@ -1,11 +1,8 @@
+#![feature(proc_macro_hygiene, decl_macro)]
+#[macro_use] extern crate rocket;
 
-#![feature(custom_derive)]
-#![feature(plugin, decl_marco)]
-#![plugin(rocket_codegen)]
+#[macro_use] extern crate serde;
 
-extern crate rocket;
-extern crate serde;
-#[macro_use] extern crate serde_derive;
 extern crate rmp_serde as rmps;
 extern crate regex;
 extern crate time;

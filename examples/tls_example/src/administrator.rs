@@ -139,7 +139,7 @@ impl AuthorizeForm for AdministratorForm {
     /// Define a custom flash_redirect() method that overrides the default
     /// implementation in authorization::AuthorizeForm trait.
     /// This allows the cookie to be made secure
-    fn flash_redirect(&self, ok_redir: &str, err_redir: &str, cookies: &mut Cookies) -> Result<Redirect, Flash<Redirect>> {
+    fn flash_redirect(&self, ok_redir: impl Into<String>, err_redir: impl Into<String>, cookies: &mut Cookies) -> Result<Redirect, Flash<Redirect>> {
         match self.authenticate() {
             Ok(cooky) => {
                 let cid = Self::cookie_id();
@@ -149,15 +149,15 @@ impl AuthorizeForm for AdministratorForm {
                         // .secure(true)
                         .finish()
                 );
-                Ok(Redirect::to(ok_redir))
+                Ok(Redirect::to(ok_redir.into()))
             },
             Err(fail) => {
-                let mut furl = String::from(err_redir);
+                let mut furl = err_redir.into();
                 if &fail.user != "" {
                     let furl_qrystr = Self::fail_url(&fail.user);
                     furl.push_str(&furl_qrystr);
                 }
-                Err( Flash::error(Redirect::to(&furl), &fail.msg) )
+                Err( Flash::error(Redirect::to(furl), &fail.msg) )
             },
         }
     }

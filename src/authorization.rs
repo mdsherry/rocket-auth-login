@@ -1,8 +1,8 @@
 
 use rocket::{Request, Outcome};
 use rocket::response::{Redirect, Flash};
-use rocket::request::{FromRequest, FromForm, FormItems, FormItem};
-use rocket::http::{Cookie, Cookies};
+use rocket::request::{FromRequest, FromForm, FormItems, FormItem, FromFormValue};
+use rocket::http::{Cookie, Cookies, RawStr};
 
 use std::collections::HashMap;
 use std::marker::Sized;
@@ -534,5 +534,13 @@ impl<'f> FromForm<'f> for UserQuery {
             }
         }
         Ok(UserQuery { user: name })
+    }
+}
+
+impl<'f> FromFormValue<'f> for UserQuery {
+    type Error = &'static str;
+    
+    fn from_form_value(form_value: &'f RawStr) -> Result<Self, Self::Error> {
+        Ok(UserQuery { user: sanitize(&form_value.url_decode().unwrap_or(String::new())) })
     }
 }
