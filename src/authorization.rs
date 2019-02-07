@@ -1,7 +1,7 @@
 
 use rocket::{Request, Outcome};
 use rocket::response::{Redirect, Flash};
-use rocket::request::{FromRequest, FromForm, FormItems};
+use rocket::request::{FromRequest, FromForm, FormItems, FormItem};
 use rocket::http::{Cookie, Cookies};
 
 use std::collections::HashMap;
@@ -325,21 +325,21 @@ pub trait AuthorizeForm : CookieId {
     /// this is so that the user can see why it failed but when they refresh
     /// it will disappear, enabling a clean start, but with the user name
     /// from the url's query string (determined by `fail_url()`)
-    fn flash_redirect(&self, ok_redir: &str, err_redir: &str, cookies: &mut Cookies) -> Result<Redirect, Flash<Redirect>> {
+    fn flash_redirect(&self, ok_redir: impl Into<String>, err_redir: impl Into<String>, cookies: &mut Cookies) -> Result<Redirect, Flash<Redirect>> {
         match self.authenticate() {
             Ok(cooky) => {
                 let cid = Self::cookie_id();
                 let contents = cooky.store_cookie();
                 cookies.add_private(Cookie::new(cid, contents));
-                Ok(Redirect::to(ok_redir))
+                Ok(Redirect::to(ok_redir.into()))
             },
             Err(fail) => {
-                let mut furl = String::from(err_redir);
+                let mut furl = err_redir.into();
                 if &fail.user != "" {
                     let furl_qrystr = Self::fail_url(&fail.user);
                     furl.push_str(&furl_qrystr);
                 }
-                Err( Flash::error(Redirect::to(&furl), &fail.msg) )
+                Err( Flash::error(Redirect::to(furl), &fail.msg) )
             },
         }
     }
@@ -352,7 +352,7 @@ pub trait AuthorizeForm : CookieId {
                 let cid = Self::cookie_id();
                 let contents = cooky.store_cookie();
                 cookies.add_private(Cookie::new(cid, contents));
-                Ok(Redirect::to(ok_redir))
+                Ok(Redirect::to(ok_redir.to_string()))
             },
             Err(fail) => {
                 let mut furl = String::from(err_redir);
@@ -360,7 +360,7 @@ pub trait AuthorizeForm : CookieId {
                     let furl_qrystr = Self::fail_url(&fail.user);
                     furl.push_str(&furl_qrystr);
                 }
-                Err( Redirect::to(&furl) )
+                Err( Redirect::to(furl) )
             },
         }
     }
@@ -443,7 +443,7 @@ impl<'f, A: AuthorizeForm> FromForm<'f> for LoginCont<A> {
         let mut pass: String = String::new();
         let mut extras: HashMap<String, String> = HashMap::new();
         
-        for (key,value) in form_items {
+        for FormItem { key, value, .. } in form_items {
             match key.as_str(){
                 "username" => {
                     user = A::clean_username(&value.url_decode().unwrap_or(String::new()));
@@ -479,7 +479,7 @@ impl<'f> FromForm<'f> for UserQuery {
     
     fn from_form(form_items: &mut FormItems<'f>, _strict: bool) -> Result<UserQuery, Self::Error> {
         let mut name: String = String::new();
-        for (key,value) in form_items {
+        for FormItem { key, value, .. } in form_items {
             match key.as_str() {
                 "user" => { name = sanitize( &value.url_decode().unwrap_or(String::new()) ); },
                 _ => {},

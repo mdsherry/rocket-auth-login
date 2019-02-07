@@ -31,11 +31,10 @@
 
 */
 
-#![feature(custom_derive)]
-#![feature(plugin)]
-#![plugin(rocket_codegen)]
+#![feature(proc_macro_hygiene, decl_macro)]
 
-extern crate rocket;
+#[macro_use] extern crate rocket;
+
 extern crate unic_ucd;
 // #[allow(unused_imports)] extern crate regex;
 // #[allow(unused_imports)] #[macro_use] extern crate lazy_static;
