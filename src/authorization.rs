@@ -73,22 +73,27 @@ pub trait CookieId {
 /// 
 /// ### Example
 ///
-/// ```
-/// 
+/// ```no_run
+///     # #![feature(proc_macro_hygiene, decl_macro)]
+///     # #[macro_use]
+///     # extern crate rocket;
+///     # extern crate serde_json;
+///     # #[macro_use]
+///     # extern crate serde;
 ///     use rocket::{Request, Outcome};
 ///     use rocket::request::FromRequest;
-///     use auth::authorization::*;
+///     use rocket::response::content::Html;
+///     use rocket_auth_login::authorization::*;
 ///     // Define a custom data type that hold the cookie information
+///     #[derive(Deserialize, Serialize)]
 ///     pub struct AdministratorCookie {
 ///         pub userid: u32,
 ///         pub username: String,
-///         pub display: Option<String>,
+///         pub display: String,
 ///     }
 ///     
 ///     // Implement CookieId for AdministratorCookie
 ///     impl CookieId for AdministratorCookie {
-///         // Tell 
-///         type CookieType = AdministratorCookie;
 ///         fn cookie_id<'a>() -> &'a str {
 ///             "asid"
 ///         }
@@ -103,11 +108,7 @@ pub trait CookieId {
 ///         fn retrieve_cookie(string: String) -> Option<Self> {
 ///             let mut des_buf = string.clone();
 ///             let des: Result<AdministratorCookie, _> = ::serde_json::from_str(&mut des_buf);
-///             if let Ok(cooky) = des {
-///                 Some(cooky)
-///             } else {
-///                 None
-///             }
+///             des.ok()
 ///         }
 ///     }
 ///     
@@ -148,10 +149,11 @@ pub trait CookieId {
 ///     #[get("/administrator", rank=2)]
 ///     fn admin_login_form() -> Html<String> {
 ///         // Html form here, see the example directory for a complete example
+///         unimplemented!()
 ///     }
 ///     
 ///     fn main() {
-///         rocket::ignite().mount("/", routes![admin_page, admin_login_form]).launc();
+///         rocket::ignite().mount("/", routes![admin_page, admin_login_form]).launch();
 ///     }
 ///     
 /// ```
@@ -196,16 +198,41 @@ pub trait AuthorizeCookie : CookieId {
 ///
 /// ## Example
 /// ```
-/// 
+///     # #![feature(proc_macro_hygiene, decl_macro)]
+///     # #[macro_use]
+///     # extern crate rocket;
+///     # extern crate serde_json;
 ///     use rocket::{Request, Outcome};
 ///     use std::collections::HashMap;
-///     use auth::authorization::*;
+///     use rocket_auth_login::authorization::*;
+///     # #[macro_use]
+///     # extern crate serde;
 ///     // Create the structure that will contain the login form data
 ///     #[derive(Debug, Clone, Serialize, Deserialize)]
 ///     pub struct AdministratorForm {
 ///         pub username: String,
 ///         pub password: String,
 ///     }
+///     # #[derive(Serialize, Deserialize)]
+///     # pub struct AdministratorCookie {
+///     #     pub userid: u32,
+///     #     pub username: String,
+///     #     pub display: String,
+///     # }
+///     # impl CookieId for AdministratorCookie {
+///     #  fn cookie_id<'a>() -> &'a str { "acid" }
+///     # }
+///     # impl AuthorizeCookie for AdministratorCookie {
+///     #     fn store_cookie(&self) -> String {
+///     #         ::serde_json::to_string(self).expect("Could not serialize structure")
+///     #     }
+///     #     fn retrieve_cookie(string: String) -> Option<Self> {
+///     #         let mut des_buf = string.clone();
+///     #         let des: Result<AdministratorCookie, _> = ::serde_json::from_str(&mut des_buf);
+///     #         des.ok()
+///     #     }
+///     # }
+///
 ///     
 ///     // Ipmlement CookieId for the form structure
 ///     impl CookieId for AdministratorForm {
@@ -228,7 +255,7 @@ pub trait AuthorizeCookie : CookieId {
 ///                     AdministratorCookie {
 ///                         userid: 1,
 ///                         username: "administrator".to_string(),
-///                         display: Some("Administrator".to_string()),
+///                         display: "Administrator".to_string(),
 ///                     }
 ///                 )
 ///             } else {
@@ -381,13 +408,34 @@ impl<T: AuthorizeCookie + Clone> AuthCont<T> {
 /// 
 /// ```rust,no_run
 /// 
-///     use auth::authorization::*;
-///     # use administration:*;
-///     use rocket;
+///     # #![feature(proc_macro_hygiene, decl_macro)]
+///     # #[macro_use]
+///     # extern crate rocket;
+///     # #[macro_use]
+///     # extern crate serde;
+///     # use rocket::response::content::Html;
+///     use rocket_auth_login::authorization::*;
+///
+/// 
+///     # #[derive(Deserialize)]
+///     # pub struct AdministratorCookie {
+///     # }
+///     # impl CookieId for AdministratorCookie {
+///     #  fn cookie_id<'a>() -> &'a str { "acid" }
+///     # }
+///     # impl AuthorizeCookie for AdministratorCookie {
+///     #     fn store_cookie(&self) -> String {
+///     #         unimplemented!()
+///     #     }
+///     #     fn retrieve_cookie(string: String) -> Option<Self> {
+///     #         unimplemented!()
+///     #     }
+///     # }
+///
 ///     #[get("/protected")]
 ///     fn protected(container: AuthCont<AdministratorCookie>) -> Html<String> {
 ///         let admin = container.cookie;
-///         String::new()
+///         Html(String::new())
 ///     }
 ///     
 ///     # fn main() {
