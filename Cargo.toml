@@ -1,7 +1,7 @@
 
 [package]
 name = "rocket-auth-login"
-version = "0.2.3"
+version = "0.3.0"
 authors = ["Andrew Prindle <prindle.andrew@gmail.com>"]
 
 description = "Login and authentication for rocket web apps.  This crate provides functions to process login forms and to deal with private cookies easily."
